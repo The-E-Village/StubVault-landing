@@ -1,0 +1,1437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StubVault — Your experiences. Locked in forever.</title>
+<meta name="description" content="StubVault is the digital home for your ticket stub collection. Every concert, every game, every show — preserved forever. Coming soon to iOS and Android.">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+
+/* ═══════════════════════════════════════════
+   TOKENS
+═══════════════════════════════════════════ */
+:root {
+  --vault-black:   #0F0C07;
+  --deep-amber:    #2C2517;
+  --mid-amber:     #1A1208;
+  --stub-gold:     #C8960C;
+  --gold-light:    #E8B52A;
+  --gold-dim:      #8C6A00;
+  --ticket-cream:  #F7F3EC;
+  --old-paper:     #EDE5D0;
+  --worn-leather:  #8C7A5A;
+  --mid-leather:   #6B5C3E;
+  --border:        rgba(200,150,12,.18);
+  --border-mid:    rgba(200,150,12,.35);
+  --border-strong: rgba(200,150,12,.6);
+  --serif:         'DM Serif Display', Georgia, serif;
+  --sans:          'DM Sans', sans-serif;
+  --mono:          'Space Mono', monospace;
+}
+
+/* ═══════════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--vault-black);
+  color: var(--ticket-cream);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ═══════════════════════════════════════════
+   NOISE TEXTURE OVERLAY
+═══════════════════════════════════════════ */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 1000;
+  opacity: .6;
+}
+
+/* ═══════════════════════════════════════════
+   NAV
+═══════════════════════════════════════════ */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 48px;
+  height: 72px;
+  background: rgba(15,12,7,.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+.nav-wordmark {
+  font-family: var(--serif);
+  font-size: 22px;
+  color: var(--ticket-cream);
+  letter-spacing: -.01em;
+}
+.nav-wordmark span { color: var(--stub-gold); }
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 36px;
+  list-style: none;
+}
+.nav-links a {
+  font-size: 13px;
+  color: var(--worn-leather);
+  text-decoration: none;
+  letter-spacing: .02em;
+  transition: color .2s;
+}
+.nav-links a:hover { color: var(--ticket-cream); }
+
+.nav-cta {
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--vault-black) !important;
+  background: var(--stub-gold);
+  padding: 9px 22px;
+  border-radius: 3px;
+  text-decoration: none;
+  letter-spacing: .03em;
+  transition: background .2s, transform .15s;
+}
+.nav-cta:hover {
+  background: var(--gold-light);
+  transform: translateY(-1px);
+}
+
+/* ═══════════════════════════════════════════
+   HERO
+═══════════════════════════════════════════ */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 120px 24px 80px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Radial glow behind hero */
+.hero::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -55%);
+  width: 800px; height: 800px;
+  background: radial-gradient(ellipse, rgba(200,150,12,.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* Subtle ticket perforation lines flanking hero */
+.hero-perf-left,
+.hero-perf-right {
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 1px;
+  background: repeating-linear-gradient(
+    to bottom,
+    var(--border-mid) 0px,
+    var(--border-mid) 8px,
+    transparent 8px,
+    transparent 16px
+  );
+  opacity: .5;
+}
+.hero-perf-left  { left: 10%; }
+.hero-perf-right { right: 10%; }
+
+.hero-eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--stub-gold);
+  margin-bottom: 28px;
+  opacity: 0;
+  animation: fadeUp .6s ease forwards .1s;
+}
+
+.hero-title {
+  font-family: var(--serif);
+  font-size: clamp(52px, 8vw, 96px);
+  line-height: 1.0;
+  letter-spacing: -.02em;
+  color: var(--ticket-cream);
+  margin-bottom: 10px;
+  opacity: 0;
+  animation: fadeUp .7s ease forwards .25s;
+}
+.hero-title em {
+  font-style: italic;
+  color: var(--stub-gold);
+}
+
+.hero-subtitle {
+  font-family: var(--serif);
+  font-size: clamp(18px, 3vw, 28px);
+  font-style: italic;
+  color: var(--worn-leather);
+  margin-bottom: 36px;
+  opacity: 0;
+  animation: fadeUp .7s ease forwards .4s;
+}
+
+.hero-body {
+  font-size: 17px;
+  color: var(--worn-leather);
+  max-width: 520px;
+  line-height: 1.75;
+  margin-bottom: 52px;
+  opacity: 0;
+  animation: fadeUp .7s ease forwards .55s;
+}
+.hero-body strong { color: var(--ticket-cream); font-weight: 500; }
+
+/* Waitlist form */
+.waitlist-form {
+  display: flex;
+  gap: 0;
+  max-width: 460px;
+  width: 100%;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  overflow: hidden;
+  opacity: 0;
+  animation: fadeUp .7s ease forwards .7s;
+}
+.waitlist-form input {
+  flex: 1;
+  background: var(--deep-amber);
+  border: none;
+  outline: none;
+  padding: 16px 20px;
+  font-family: var(--sans);
+  font-size: 14px;
+  color: var(--ticket-cream);
+  min-width: 0;
+}
+.waitlist-form input::placeholder { color: var(--mid-leather); }
+.waitlist-form button {
+  background: var(--stub-gold);
+  border: none;
+  padding: 16px 28px;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--vault-black);
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .2s;
+}
+.waitlist-form button:hover { background: var(--gold-light); }
+
+.hero-note {
+  font-size: 12px;
+  color: var(--mid-leather);
+  margin-top: 14px;
+  opacity: 0;
+  animation: fadeUp .7s ease forwards .85s;
+}
+
+/* Store badges placeholder */
+.store-badges {
+  display: flex;
+  gap: 14px;
+  margin-top: 48px;
+  opacity: 0;
+  animation: fadeUp .7s ease forwards 1s;
+}
+.badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--deep-amber);
+  border: 1px solid var(--border-mid);
+  border-radius: 10px;
+  padding: 10px 20px;
+  cursor: default;
+}
+.badge-icon { font-size: 22px; }
+.badge-text-top {
+  font-size: 9px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--worn-leather);
+}
+.badge-text-main {
+  font-family: var(--serif);
+  font-size: 15px;
+  color: var(--ticket-cream);
+  margin-top: 1px;
+}
+
+/* ═══════════════════════════════════════════
+   SECTION UTILITY
+═══════════════════════════════════════════ */
+section {
+  padding: 100px 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.section-eyebrow {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--stub-gold);
+  margin-bottom: 14px;
+}
+.section-title {
+  font-family: var(--serif);
+  font-size: clamp(32px, 5vw, 52px);
+  color: var(--ticket-cream);
+  line-height: 1.1;
+  letter-spacing: -.015em;
+  margin-bottom: 20px;
+}
+.section-title em { font-style: italic; color: var(--stub-gold); }
+.section-body {
+  font-size: 16px;
+  color: var(--worn-leather);
+  max-width: 540px;
+  line-height: 1.75;
+}
+
+.gold-rule {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--border-mid), transparent);
+  margin: 0 auto;
+}
+
+/* ═══════════════════════════════════════════
+   STUB DEMO CARD
+═══════════════════════════════════════════ */
+.stub-showcase {
+  display: flex;
+  align-items: center;
+  gap: 80px;
+  padding: 100px 48px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.stub-text { flex: 1; }
+
+.stub-card-wrap {
+  flex: 0 0 auto;
+  position: relative;
+}
+
+/* Glow behind the card */
+.stub-card-wrap::before {
+  content: '';
+  position: absolute;
+  inset: -40px;
+  background: radial-gradient(ellipse, rgba(200,150,12,.12) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.stub-card {
+  width: 320px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 32px 80px rgba(0,0,0,.7), 0 0 0 1px rgba(200,150,12,.3);
+  position: relative;
+  transform: rotate(-2deg);
+  transition: transform .3s ease;
+}
+.stub-card:hover { transform: rotate(0deg) scale(1.02); }
+
+.stub-card-top {
+  background: linear-gradient(135deg, #1A1208 0%, #2C2517 100%);
+  padding: 28px 24px 20px;
+  position: relative;
+}
+.stub-card-top::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 1px;
+  background: repeating-linear-gradient(
+    to right,
+    transparent 0px,
+    transparent 6px,
+    rgba(200,150,12,.4) 6px,
+    rgba(200,150,12,.4) 10px
+  );
+}
+
+.stub-card-category {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--stub-gold);
+  margin-bottom: 10px;
+}
+.stub-card-event {
+  font-family: var(--serif);
+  font-size: 22px;
+  color: var(--ticket-cream);
+  line-height: 1.2;
+  margin-bottom: 4px;
+}
+.stub-card-artist {
+  font-size: 13px;
+  color: var(--worn-leather);
+  margin-bottom: 20px;
+}
+
+.stub-card-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.stub-meta-item {}
+.stub-meta-label {
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--mid-leather);
+  margin-bottom: 2px;
+}
+.stub-meta-value {
+  font-size: 12px;
+  color: var(--ticket-cream);
+  font-weight: 500;
+}
+
+.stub-card-bottom {
+  background: var(--ticket-cream);
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.stub-card-seat {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--vault-black);
+  font-weight: 700;
+}
+.stub-card-accent {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--stub-gold);
+}
+
+/* ═══════════════════════════════════════════
+   FEATURES GRID
+═══════════════════════════════════════════ */
+.features-section {
+  padding: 100px 48px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.features-header {
+  text-align: center;
+  margin-bottom: 64px;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.feature-cell {
+  background: var(--deep-amber);
+  padding: 36px 32px;
+  position: relative;
+  transition: background .25s;
+}
+.feature-cell:hover { background: #33291A; }
+
+/* Right border on non-last columns */
+.feature-cell:not(:nth-child(3n)) {
+  border-right: 1px solid var(--border);
+}
+/* Bottom border on non-last rows */
+.feature-cell:nth-child(-n+3) {
+  border-bottom: 1px solid var(--border);
+}
+
+.feature-icon {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--border-mid);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.feature-title {
+  font-family: var(--serif);
+  font-size: 18px;
+  color: var(--ticket-cream);
+  margin-bottom: 10px;
+  line-height: 1.2;
+}
+.feature-body {
+  font-size: 14px;
+  color: var(--worn-leather);
+  line-height: 1.65;
+}
+
+/* ═══════════════════════════════════════════
+   STATS BAR
+═══════════════════════════════════════════ */
+.stats-bar {
+  background: var(--deep-amber);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 56px 48px;
+}
+.stats-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+}
+.stat-item {
+  text-align: center;
+  padding: 0 24px;
+  border-right: 1px solid var(--border);
+}
+.stat-item:last-child { border-right: none; }
+
+.stat-num {
+  font-family: var(--serif);
+  font-size: 48px;
+  color: var(--stub-gold);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+.stat-label {
+  font-size: 13px;
+  color: var(--worn-leather);
+  line-height: 1.4;
+}
+
+/* ═══════════════════════════════════════════
+   CATEGORIES
+═══════════════════════════════════════════ */
+.categories-section {
+  padding: 100px 48px;
+  max-width: 1100px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: center;
+}
+
+.categories-pill-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.cat-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--deep-amber);
+  border: 1px solid var(--border-mid);
+  border-radius: 40px;
+  padding: 10px 18px;
+  font-size: 13px;
+  color: var(--ticket-cream);
+  font-weight: 500;
+  transition: border-color .2s, background .2s;
+  cursor: default;
+}
+.cat-pill:hover {
+  border-color: var(--stub-gold);
+  background: rgba(200,150,12,.08);
+}
+.cat-pill svg { flex-shrink: 0; }
+
+/* ═══════════════════════════════════════════
+   TESTIMONIAL / QUOTE BAND
+═══════════════════════════════════════════ */
+.quote-band {
+  background: linear-gradient(135deg, #1A1208 0%, #2C2517 60%, #1A1208 100%);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 80px 48px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.quote-band::before {
+  content: '\201C';
+  position: absolute;
+  top: -20px; left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--serif);
+  font-size: 220px;
+  color: rgba(200,150,12,.06);
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+}
+
+.quote-text {
+  font-family: var(--serif);
+  font-size: clamp(22px, 4vw, 38px);
+  font-style: italic;
+  color: var(--ticket-cream);
+  max-width: 780px;
+  margin: 0 auto 24px;
+  line-height: 1.4;
+  position: relative;
+  z-index: 1;
+}
+.quote-text em { color: var(--stub-gold); font-style: normal; }
+
+.quote-attr {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--worn-leather);
+  position: relative;
+  z-index: 1;
+}
+
+/* ═══════════════════════════════════════════
+   PRICING
+═══════════════════════════════════════════ */
+.pricing-section {
+  padding: 100px 48px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.pricing-header {
+  text-align: center;
+  margin-bottom: 56px;
+}
+
+.pricing-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.pricing-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.pricing-card.pro {
+  border-color: var(--stub-gold);
+  box-shadow: 0 0 40px rgba(200,150,12,.08);
+}
+
+.pricing-head {
+  background: var(--mid-amber);
+  padding: 28px 28px 24px;
+  border-bottom: 1px solid var(--border);
+}
+.pricing-card.pro .pricing-head {
+  background: linear-gradient(135deg, #2C2517, #1A1208);
+  border-bottom-color: var(--border-mid);
+}
+
+.pricing-tier-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--worn-leather);
+  margin-bottom: 8px;
+}
+.pricing-price {
+  font-family: var(--serif);
+  font-size: 42px;
+  color: var(--ticket-cream);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.pricing-card.pro .pricing-price { color: var(--stub-gold); }
+.pricing-price sup {
+  font-size: 20px;
+  vertical-align: top;
+  margin-top: 8px;
+  display: inline-block;
+}
+.pricing-price sub { font-size: 14px; color: var(--worn-leather); }
+.pricing-per { font-size: 12px; color: var(--mid-leather); }
+
+.pricing-body { padding: 24px 28px; background: var(--deep-amber); }
+.pricing-card.pro .pricing-body { background: rgba(44,37,23,.6); }
+
+.pricing-feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 0;
+  font-size: 14px;
+  color: var(--worn-leather);
+  border-bottom: 1px solid var(--border);
+}
+.pricing-feature:last-of-type { border-bottom: none; margin-bottom: 20px; }
+.pricing-feature .check {
+  color: var(--stub-gold);
+  font-size: 12px;
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+.pricing-feature .cross {
+  color: var(--mid-leather);
+  font-size: 12px;
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+.pricing-feature.active { color: var(--ticket-cream); }
+
+.pricing-btn {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  text-align: center;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-radius: 4px;
+  cursor: pointer;
+  border: none;
+  transition: all .2s;
+}
+.pricing-btn-free {
+  background: transparent;
+  border: 1px solid var(--border-mid);
+  color: var(--worn-leather);
+}
+.pricing-btn-free:hover { border-color: var(--stub-gold); color: var(--ticket-cream); }
+.pricing-btn-pro {
+  background: var(--stub-gold);
+  color: var(--vault-black);
+}
+.pricing-btn-pro:hover { background: var(--gold-light); }
+
+/* ═══════════════════════════════════════════
+   FINAL CTA
+═══════════════════════════════════════════ */
+.final-cta {
+  padding: 120px 48px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.final-cta::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px; height: 600px;
+  background: radial-gradient(ellipse, rgba(200,150,12,.07) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.final-cta-title {
+  font-family: var(--serif);
+  font-size: clamp(36px, 6vw, 64px);
+  color: var(--ticket-cream);
+  line-height: 1.1;
+  letter-spacing: -.02em;
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 1;
+}
+.final-cta-title em { color: var(--stub-gold); font-style: italic; }
+
+.final-cta-body {
+  font-size: 17px;
+  color: var(--worn-leather);
+  max-width: 500px;
+  margin: 0 auto 48px;
+  line-height: 1.75;
+  position: relative;
+  z-index: 1;
+}
+
+.final-waitlist-form {
+  display: flex;
+  gap: 0;
+  max-width: 440px;
+  width: 100%;
+  margin: 0 auto;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+}
+.final-waitlist-form input {
+  flex: 1;
+  background: var(--deep-amber);
+  border: none;
+  outline: none;
+  padding: 16px 20px;
+  font-family: var(--sans);
+  font-size: 14px;
+  color: var(--ticket-cream);
+  min-width: 0;
+}
+.final-waitlist-form input::placeholder { color: var(--mid-leather); }
+.final-waitlist-form button {
+  background: var(--stub-gold);
+  border: none;
+  padding: 16px 28px;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--vault-black);
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background .2s;
+}
+.final-waitlist-form button:hover { background: var(--gold-light); }
+
+/* ═══════════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════════ */
+footer {
+  background: var(--mid-amber);
+  border-top: 1px solid var(--border);
+  padding: 52px 48px 36px;
+}
+.footer-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.footer-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 48px;
+}
+.footer-brand {}
+.footer-wordmark {
+  font-family: var(--serif);
+  font-size: 24px;
+  color: var(--ticket-cream);
+  margin-bottom: 6px;
+}
+.footer-tagline {
+  font-style: italic;
+  font-family: var(--serif);
+  font-size: 13px;
+  color: var(--stub-gold);
+}
+.footer-links {
+  display: flex;
+  gap: 60px;
+}
+.footer-col-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--stub-gold);
+  margin-bottom: 14px;
+}
+.footer-col a {
+  display: block;
+  font-size: 13px;
+  color: var(--worn-leather);
+  text-decoration: none;
+  margin-bottom: 8px;
+  transition: color .2s;
+}
+.footer-col a:hover { color: var(--ticket-cream); }
+
+.footer-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 28px;
+  border-top: 1px solid var(--border);
+}
+.footer-copy {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--mid-leather);
+}
+.footer-social {
+  display: flex;
+  gap: 18px;
+}
+.footer-social a {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--mid-leather);
+  text-decoration: none;
+  letter-spacing: .06em;
+  transition: color .2s;
+}
+.footer-social a:hover { color: var(--stub-gold); }
+
+/* ═══════════════════════════════════════════
+   ANIMATIONS
+═══════════════════════════════════════════ */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Scroll reveal */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity .7s ease, transform .7s ease;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════ */
+@media (max-width: 900px) {
+  nav { padding: 0 24px; }
+  .nav-links { display: none; }
+  .stub-showcase { flex-direction: column; gap: 48px; padding: 80px 24px; text-align: center; }
+  .stub-showcase .section-body { margin: 0 auto; }
+  .features-grid { grid-template-columns: 1fr; }
+  .feature-cell:not(:nth-child(3n)) { border-right: none; }
+  .feature-cell:nth-child(-n+3) { border-bottom: 1px solid var(--border); }
+  .feature-cell:last-child { border-bottom: none; }
+  .stats-inner { grid-template-columns: repeat(2, 1fr); gap: 32px; }
+  .stat-item { border-right: none; }
+  .categories-section { grid-template-columns: 1fr; gap: 48px; padding: 80px 24px; }
+  .pricing-grid { grid-template-columns: 1fr; max-width: 400px; }
+  .footer-top { flex-direction: column; gap: 40px; }
+  .footer-links { flex-wrap: wrap; gap: 32px; }
+  .features-section, .pricing-section { padding: 80px 24px; }
+  .stats-bar { padding: 56px 24px; }
+  .quote-band { padding: 60px 24px; }
+  .final-cta { padding: 80px 24px; }
+  footer { padding: 48px 24px 32px; }
+}
+
+@media (max-width: 600px) {
+  .store-badges { flex-direction: column; align-items: center; }
+  .waitlist-form { flex-direction: column; border-radius: 6px; }
+  .waitlist-form input, .waitlist-form button { border-radius: 0; }
+  .final-waitlist-form { flex-direction: column; }
+  .final-waitlist-form input, .final-waitlist-form button { width: 100%; }
+  .stats-inner { grid-template-columns: 1fr 1fr; }
+}
+
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════
+     NAV
+═══════════════════════════════════════ -->
+<nav>
+  <a href="#" class="nav-logo">
+    <!-- Vault icon SVG -->
+    <svg width="36" height="36" viewBox="0 0 70 70" xmlns="http://www.w3.org/2000/svg">
+      <defs><clipPath id="nc"><path d="M8,2 H62 Q68,2 68,8 V28 Q62,28 62,35 Q62,42 68,42 V62 Q68,68 62,68 H8 Q2,68 2,62 V42 Q8,42 8,35 Q8,28 2,28 V8 Q2,2 8,2 Z"/></clipPath></defs>
+      <rect x="0" y="0" width="35" height="70" fill="#0F0C07" clip-path="url(#nc)"/>
+      <rect x="35" y="0" width="35" height="70" fill="#F7F3EC" clip-path="url(#nc)"/>
+      <path d="M8,2 H62 Q68,2 68,8 V28 Q62,28 62,35 Q62,42 68,42 V62 Q68,68 62,68 H8 Q2,68 2,62 V42 Q8,42 8,35 Q8,28 2,28 V8 Q2,2 8,2 Z" fill="none" stroke="#C8960C" stroke-width="1.5"/>
+      <circle cx="35" cy="8"  r="3.5" fill="#8C7A5A"/><circle cx="35" cy="8"  r="2.3" fill="#F7F3EC"/>
+      <circle cx="35" cy="62" r="3.5" fill="#8C7A5A"/><circle cx="35" cy="62" r="2.3" fill="#F7F3EC"/>
+      <circle cx="17.5" cy="35" r="9" fill="none" stroke="#C8960C" stroke-width="1.5"/>
+      <circle cx="17.5" cy="35" r="3" fill="#C8960C"/>
+    </svg>
+    <span class="nav-wordmark">Stub<span>Vault</span></span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#categories">Categories</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="#waitlist" class="nav-cta">Join Waitlist</a></li>
+  </ul>
+</nav>
+
+
+<!-- ═══════════════════════════════════════
+     HERO
+═══════════════════════════════════════ -->
+<section class="hero" id="top">
+  <div class="hero-perf-left"></div>
+  <div class="hero-perf-right"></div>
+
+  <p class="hero-eyebrow">Coming soon — iOS &amp; Android</p>
+
+  <h1 class="hero-title">The photo album<br>for your <em>experiences.</em></h1>
+  <p class="hero-subtitle">Every show. Every seat. Every memory.</p>
+
+  <p class="hero-body">
+    You've been to hundreds of concerts, games, and shows.<br>
+    <strong>StubVault is where they live forever.</strong><br>
+    The app that turns every ticket stub into a permanent piece of your story.
+  </p>
+
+  <div class="waitlist-form" id="waitlist">
+    <input type="email" placeholder="your@email.com" aria-label="Email address">
+    <button type="button" onclick="handleWaitlist(this)">Reserve My Spot</button>
+  </div>
+  <p class="hero-note">No spam. No credit card. Just early access when we launch.</p>
+
+  <div class="store-badges">
+    <div class="badge">
+      <span class="badge-icon">🍎</span>
+      <div>
+        <div class="badge-text-top">Coming to</div>
+        <div class="badge-text-main">App Store</div>
+      </div>
+    </div>
+    <div class="badge">
+      <span class="badge-icon">▶</span>
+      <div>
+        <div class="badge-text-top">Coming to</div>
+        <div class="badge-text-main">Google Play</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="gold-rule"></div>
+
+
+<!-- ═══════════════════════════════════════
+     STUB CARD DEMO
+═══════════════════════════════════════ -->
+<div class="stub-showcase">
+  <div class="stub-text reveal">
+    <p class="section-eyebrow">Your vault, beautifully designed</p>
+    <h2 class="section-title">Every stub becomes<br>a <em>keepsake.</em></h2>
+    <p class="section-body">
+      StubVault turns your ticket data into stunning digital stubs — each one capturing the artist, venue, date, seat, and category in a format that actually looks like a ticket. Your collection is your timeline.
+    </p>
+  </div>
+
+  <div class="stub-card-wrap reveal">
+    <div class="stub-card">
+      <div class="stub-card-top">
+        <div class="stub-card-category">🎵 Concert</div>
+        <div class="stub-card-event">The Rolling Stones</div>
+        <div class="stub-card-artist">Hackney Diamonds Tour</div>
+        <div class="stub-card-meta">
+          <div class="stub-meta-item">
+            <div class="stub-meta-label">Date</div>
+            <div class="stub-meta-value">Oct 19, 2023</div>
+          </div>
+          <div class="stub-meta-item">
+            <div class="stub-meta-label">Venue</div>
+            <div class="stub-meta-value">SoFi Stadium</div>
+          </div>
+          <div class="stub-meta-item">
+            <div class="stub-meta-label">Section</div>
+            <div class="stub-meta-value">Floor GA</div>
+          </div>
+          <div class="stub-meta-item">
+            <div class="stub-meta-label">City</div>
+            <div class="stub-meta-value">Los Angeles, CA</div>
+          </div>
+        </div>
+      </div>
+      <div class="stub-card-bottom">
+        <div class="stub-card-seat" style="color:#0F0C07;font-size:10px;letter-spacing:.08em;">STUBVAULT · STUB #0047</div>
+        <div class="stub-card-accent"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="gold-rule"></div>
+
+
+<!-- ═══════════════════════════════════════
+     STATS
+═══════════════════════════════════════ -->
+<div class="stats-bar">
+  <div class="stats-inner">
+    <div class="stat-item reveal">
+      <div class="stat-num">10+</div>
+      <div class="stat-label">Event categories<br>supported</div>
+    </div>
+    <div class="stat-item reveal">
+      <div class="stat-num">∞</div>
+      <div class="stat-label">Stubs you can<br>save forever</div>
+    </div>
+    <div class="stat-item reveal">
+      <div class="stat-num">1</div>
+      <div class="stat-label">Place for every<br>experience you've lived</div>
+    </div>
+    <div class="stat-item reveal">
+      <div class="stat-num">0</div>
+      <div class="stat-label">Shoeboxes required</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════
+     FEATURES
+═══════════════════════════════════════ -->
+<div class="features-section" id="features">
+  <div class="features-header reveal">
+    <p class="section-eyebrow">Built for collectors</p>
+    <h2 class="section-title">Everything your vault needs.</h2>
+  </div>
+
+  <div class="features-grid">
+    <div class="feature-cell reveal">
+      <div class="feature-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C8960C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="2"/>
+        </svg>
+      </div>
+      <div class="feature-title">Beautiful Digital Stubs</div>
+      <div class="feature-body">Every entry becomes a richly designed ticket stub. Artist, venue, date, seat, and category — all rendered in StubVault's signature style.</div>
+    </div>
+    <div class="feature-cell reveal">
+      <div class="feature-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C8960C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+        </svg>
+      </div>
+      <div class="feature-title">Your Album View</div>
+      <div class="feature-body">A stunning grid of every stub you've ever saved. Browse by year, category, or artist. Your entire history, beautifully organized.</div>
+    </div>
+    <div class="feature-cell reveal">
+      <div class="feature-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C8960C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+        </svg>
+      </div>
+      <div class="feature-title">Memory Notes</div>
+      <div class="feature-body">Attach a personal note to any stub. What you felt. Who you were with. The moment the lights went dark. The detail that makes it yours.</div>
+    </div>
+    <div class="feature-cell reveal">
+      <div class="feature-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C8960C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+      </div>
+      <div class="feature-title">Your Timeline</div>
+      <div class="feature-body">Stubs sorted chronologically so you can trace your life through the shows you attended. From your first concert to last night's game.</div>
+    </div>
+    <div class="feature-cell reveal">
+      <div class="feature-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C8960C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>
+        </svg>
+      </div>
+      <div class="feature-title">Category Tags</div>
+      <div class="feature-body">Concerts, sports, theater, comedy, festivals, film, and more. Filter your vault any way you like. Your collection, your rules.</div>
+    </div>
+    <div class="feature-cell reveal">
+      <div class="feature-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C8960C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/>
+        </svg>
+      </div>
+      <div class="feature-title">Locked In Forever</div>
+      <div class="feature-body">Your collection is stored securely in the cloud. Phone dies, phone changes — your vault is always right where you left it.</div>
+    </div>
+  </div>
+</div>
+
+<div class="gold-rule"></div>
+
+
+<!-- ═══════════════════════════════════════
+     QUOTE
+═══════════════════════════════════════ -->
+<div class="quote-band">
+  <div class="quote-text">
+    "That shoebox under the bed has been waiting for this app.<br>StubVault is the <em>photo album for your experiences</em> — and it's about time."
+  </div>
+  <div class="quote-attr">— The StubVault Story</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════
+     CATEGORIES
+═══════════════════════════════════════ -->
+<div class="categories-section" id="categories">
+  <div class="reveal">
+    <p class="section-eyebrow">Every kind of live experience</p>
+    <h2 class="section-title">Your whole<br>life, <em>live.</em></h2>
+    <p class="section-body">
+      StubVault isn't just for concerts. Any live experience worth attending is worth saving. Log every category, build a collection that's truly yours.
+    </p>
+  </div>
+  <div class="categories-pill-grid reveal">
+    <div class="cat-pill">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C8960C" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+      Concert
+    </div>
+    <div class="cat-pill">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C8960C" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 14.14 14.14"/></svg>
+      Sports
+    </div>
+    <div class="cat-pill">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C8960C" stroke-width="2"><path d="M2 20h.01M7 20v-4"/><path d="M12 20v-8"/><path d="M17 20V8"/><path d="M22 4v16"/></svg>
+      Festival
+    </div>
+    <div class="cat-pill">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C8960C" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Theater
+    </div>
+    <div class="cat-pill">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C8960C" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+      Film
+    </div>
+    <div class="cat-pill">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C8960C" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+      Comedy
+    </div>
+    <div class="cat-pill">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C8960C" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Broadway
+    </div>
+    <div class="cat-pill">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C8960C" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      Opera
+    </div>
+    <div class="cat-pill">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C8960C" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      Wrestling
+    </div>
+    <div class="cat-pill">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C8960C" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      Other
+    </div>
+  </div>
+</div>
+
+<div class="gold-rule"></div>
+
+
+<!-- ═══════════════════════════════════════
+     PRICING
+═══════════════════════════════════════ -->
+<div class="pricing-section" id="pricing">
+  <div class="pricing-header reveal">
+    <p class="section-eyebrow">Simple pricing</p>
+    <h2 class="section-title">Start free. Go <em>Pro</em> when you're ready.</h2>
+  </div>
+
+  <div class="pricing-grid">
+    <div class="pricing-card reveal">
+      <div class="pricing-head">
+        <div class="pricing-tier-label">Free Forever</div>
+        <div class="pricing-price">$0<sub>/mo</sub></div>
+        <div class="pricing-per">No credit card needed</div>
+      </div>
+      <div class="pricing-body">
+        <div class="pricing-feature active"><span class="check">✓</span> Up to 10 stubs</div>
+        <div class="pricing-feature active"><span class="check">✓</span> All event categories</div>
+        <div class="pricing-feature active"><span class="check">✓</span> Memory notes</div>
+        <div class="pricing-feature"><span class="cross">–</span> Unlimited stubs</div>
+        <div class="pricing-feature"><span class="cross">–</span> Photo attachments</div>
+        <div class="pricing-feature"><span class="cross">–</span> Export &amp; share</div>
+        <a href="#waitlist" class="pricing-btn pricing-btn-free">Get Started Free</a>
+      </div>
+    </div>
+
+    <div class="pricing-card pro reveal">
+      <div class="pricing-head">
+        <div class="pricing-tier-label">StubVault Pro</div>
+        <div class="pricing-price"><sup>$</sup>5.99<sub>/mo</sub></div>
+        <div class="pricing-per">$49.99/year — save 30%</div>
+      </div>
+      <div class="pricing-body">
+        <div class="pricing-feature active"><span class="check">✓</span> Unlimited stubs</div>
+        <div class="pricing-feature active"><span class="check">✓</span> All event categories</div>
+        <div class="pricing-feature active"><span class="check">✓</span> Memory notes</div>
+        <div class="pricing-feature active"><span class="check">✓</span> Photo attachments</div>
+        <div class="pricing-feature active"><span class="check">✓</span> Export &amp; share vault</div>
+        <div class="pricing-feature active"><span class="check">✓</span> Priority support</div>
+        <a href="#waitlist" class="pricing-btn pricing-btn-pro">Join Waitlist for Pro</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════
+     FINAL CTA
+═══════════════════════════════════════ -->
+<div class="final-cta">
+  <h2 class="final-cta-title">Your experiences.<br><em>Locked in forever.</em></h2>
+  <p class="final-cta-body">
+    The app is almost here. Join the waitlist and be the first to open your vault when we launch.
+  </p>
+  <div class="final-waitlist-form">
+    <input type="email" placeholder="your@email.com" aria-label="Email address">
+    <button type="button" onclick="handleWaitlist(this)">Join the Waitlist</button>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════
+     FOOTER
+═══════════════════════════════════════ -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="footer-wordmark">StubVault</div>
+        <div class="footer-tagline">Your experiences. Locked in forever.</div>
+      </div>
+      <div class="footer-links">
+        <div class="footer-col">
+          <div class="footer-col-label">Product</div>
+          <a href="#features">Features</a>
+          <a href="#pricing">Pricing</a>
+          <a href="#categories">Categories</a>
+          <a href="#waitlist">Join Waitlist</a>
+        </div>
+        <div class="footer-col">
+          <div class="footer-col-label">Company</div>
+          <a href="#">About</a>
+          <a href="#">Press Kit</a>
+          <a href="#">Contact</a>
+        </div>
+        <div class="footer-col">
+          <div class="footer-col-label">Legal</div>
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Service</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-copy">© 2026 StubVault. All rights reserved.</div>
+      <div class="footer-social">
+        <a href="#">Instagram</a>
+        <a href="#">TikTok</a>
+        <a href="#">Twitter / X</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+<!-- ═══════════════════════════════════════
+     JS
+═══════════════════════════════════════ -->
+<script>
+// Scroll reveal
+const reveals = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+      observer.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.12 });
+reveals.forEach(el => observer.observe(el));
+
+// Waitlist handler — submits to Kit (form 9515074)
+async function handleWaitlist(btn) {
+  const form = btn.closest('.waitlist-form, .final-waitlist-form');
+  const input = form.querySelector('input[type="email"]');
+  const email = input.value.trim();
+  if (!email || !email.includes('@')) {
+    input.style.borderLeft = '3px solid #C8960C';
+    input.focus();
+    return;
+  }
+  const original = btn.textContent;
+  input.style.borderLeft = '';
+  btn.disabled = true;
+  btn.textContent = 'Joining…';
+  try {
+    const res = await fetch('https://app.kit.com/forms/9515074/subscriptions', {
+      method: 'POST',
+      headers: { 'Accept': 'application/json' },
+      body: new URLSearchParams({ email_address: email })
+    });
+    if (!res.ok) throw new Error('Subscription request failed');
+    // Double opt-in is on, so direct them to confirm
+    btn.textContent = '✓ Check your inbox!';
+    btn.style.background = '#2C2517';
+    btn.style.color = '#C8960C';
+    btn.style.letterSpacing = '.03em';
+    input.value = '';
+    input.placeholder = 'Confirm via the email we sent \u2192';
+    input.disabled = true;
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = original;
+    input.style.borderLeft = '3px solid #C8960C';
+    input.value = email;
+    input.placeholder = 'Something went wrong \u2014 try again';
+  }
+}
+
+// Let the Enter key submit either waitlist field
+document.querySelectorAll('.waitlist-form input[type="email"], .final-waitlist-form input[type="email"]').forEach(function (inp) {
+  inp.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      var b = inp.closest('.waitlist-form, .final-waitlist-form').querySelector('button');
+      if (b) handleWaitlist(b);
+    }
+  });
+});
+</script>
+
+</body>
+</html>
